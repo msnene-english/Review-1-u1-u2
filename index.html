@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+    <html lang="vi">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rReview 1 (U1-U2)</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f0f2f5; position: relative; z-index: 1; }
+        .watermark { position: absolute; top: 30px; left: 0; right: 0; text-align: center; font-size: 50px; color: rgba(0, 0, 0, 0.04); font-weight: bold; pointer-events: none; z-index: -1; user-select: none; }
+        .watermark div { transform: rotate(-30deg); margin: 200px 0; }
+        h1, h2 { color: #2c3e50; text-align: center; }
+        .screen { display: none; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .screen.active { display: block; }
+        
+        input[type="text"] { width: 100%; padding: 12px; margin: 10px 0 20px; border: 2px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; transition: border-color 0.3s; }
+        input[type="text"]:focus { border-color: #3498db; outline: none; }
+        
+        button { background: #3498db; color: #fff; border: none; padding: 12px 24px; font-size: 16px; border-radius: 6px; cursor: pointer; transition: background 0.3s, transform 0.1s; }
+        button:hover { background: #2980b9; }
+        button:active { transform: scale(0.98); }
+        button:disabled { background: #95a5a6; cursor: not-allowed; }
+        
+        .question-block { margin-bottom: 25px; padding: 15px; background: #f9f9f9; border-left: 4px solid #3498db; border-radius: 0 8px 8px 0; }
+        .instruction-box { margin-bottom: 15px; padding: 10px 15px; background: #e8f4fd; border: 1px solid #b6d4fe; border-radius: 6px; font-weight: bold; color: #004085; }
+        .question-text { font-weight: 500; margin-bottom: 15px; font-size: 16px; line-height: 1.8; }
+        
+        .options { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+        .option { padding: 12px 15px; background: #fff; border: 2px solid #eee; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+        .option:hover { border-color: #3498db; background: #f8faff; }
+        .option.selected { border-color: #3498db; background: #ebf5ff; }
+        .option.correct-opt { border-color: #2ecc71; background: #eafaf1; }
+        .option.wrong-opt { border-color: #e74c3c; background: #fdedec; }
+        
+        .radio-circle { width: 20px; height: 20px; border: 2px solid #ddd; border-radius: 50%; position: relative; }
+        .option.selected .radio-circle::after { content: ''; position: absolute; top: 4px; left: 4px; width: 12px; height: 12px; background: #3498db; border-radius: 50%; }
+        
+        .gap-fill-input { width: 120px !important; padding: 4px 8px !important; margin: 0 5px !important; display: inline-block !important; border: 1px solid #ccc !important; border-radius: 4px !important; font-size: 16px !important; }
+        
+        .reordering-container { display: flex; flex-direction: column; gap: 15px; }
+        .word-bank, .drop-zone { display: flex; flex-wrap: wrap; gap: 8px; min-height: 45px; padding: 10px; background: #fff; border: 2px dashed #ddd; border-radius: 8px; }
+        .word-chip { padding: 8px 16px; background: #3498db; color: #fff; border-radius: 20px; cursor: pointer; user-select: none; font-weight: 500; transition: transform 0.1s; }
+        .word-chip:active { transform: scale(0.95); }
+        .word-chip.correct { background: #2ecc71; }
+        .word-chip.wrong { background: #e74c3c; }
+        
+        .rewrite-input { width: 100%; height: 80px; padding: 12px; border: 2px solid #ddd; border-radius: 6px; resize: vertical; font-size: 16px; font-family: inherit; }
+        
+        .check-btn { margin-top: 15px; background: #3498db; font-size: 14px; padding: 8px 16px; }
+        .explanation { display: none; margin-top: 15px; padding: 15px; background: #eef2f5; border-radius: 6px; font-size: 14.5px; line-height: 1.5; color: #2c3e50; border-left: 4px solid #2ecc71; }
+        
+        .progress-bar { width: 100%; height: 10px; background: #ddd; border-radius: 5px; margin-bottom: 20px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #2ecc71; width: 0%; transition: width 0.3s; }
+        
+        .result-details { margin-top: 20px; padding: 15px; padding-bottom: 30px; background: #f8f9fa; border-radius: 6px; text-align: left; max-height: 60vh; overflow-y: auto; font-size: 14px; }
+        .error-item { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #eee; color: #e74c3c; }
+    </style>
+    </head>
+    <body>
+    <div class="watermark">
+        <div>rReview 1 (U1-U2)<br>GV biên soạn: Ms Chí Nên - 0852639652</div>
+        <div>rReview 1 (U1-U2)<br>GV biên soạn: Ms Chí Nên - 0852639652</div>
+        <div>rReview 1 (U1-U2)<br>GV biên soạn: Ms Chí Nên - 0852639652</div>
+        <div>rReview 1 (U1-U2)<br>GV biên soạn: Ms Chí Nên - 0852639652</div>
+    </div>
+    
+    <div id="startScreen" class="screen active">
+        <h1>rReview 1 (U1-U2)</h1>
+        <p style="text-align: center; color: #7f8c8d;">Nhập họ và tên của bạn để bắt đầu làm bài</p>
+        <input type="text" id="studentName" placeholder="Ví dụ: Nguyễn Văn A" autocomplete="off">
+        <div style="text-align: center;">
+            <button onclick="startTest()">Bắt đầu làm bài</button>
+        </div>
+    </div>
+    
+    <div id="testScreen" class="screen">
+        <h2>rReview 1 (U1-U2)</h2>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div id="questionsContainer"></div>
+        <div style="text-align: center; margin-top: 30px;">
+            <button id="submitBtn" onclick="confirmSubmit()" style="background: #2ecc71; font-weight: bold; padding: 15px 40px;">NỘP BÀI</button>
+        </div>
+    </div>
+    
+    <div id="resultScreen" class="screen" style="text-align: center;">
+        <h1 style="color: #2ecc71; font-size: 36px;">Hoàn thành!</h1>
+        <h2 id="scoreDisplay" style="font-size: 48px; margin: 20px 0; color: #2c3e50;"></h2>
+        <p id="feedbackText" style="font-size: 18px; color: #7f8c8d;"></p>
+        <div class="result-details" id="resultDetails"></div>
+    </div>
+    
+    <div style="text-align: center; margin-top: 50px; padding: 20px; color: #7f8c8d; font-size: 14px; border-top: 1px solid #ddd;">
+        GV biên soạn: Ms Chí Nên - 0852639652
+    </div>
+    
+    <script>
+        const testName = 'rReview 1 (U1-U2)';
+        const quizData = [
+  {
+    id: 1, type: "gap_fill_text",
+    question: "<b>A. Write one word in each gap.</b><br>1. What {{blank:b1}} the phrase 'the great British seaside' bring to mind?",
+    blanks: [{ blankId: "b1", correctAnswers: ["does"] }],
+    explanationHTML: "Dịch: Cụm từ 'bờ biển tuyệt vời của nước Anh' gợi lên điều gì trong tâm trí?<br>Cấu trúc: Trợ động từ 'does' được dùng trong câu hỏi thì hiện tại đơn với chủ ngữ số ít 'the phrase'."
+  },
+  {
+    id: 2, type: "gap_fill_text",
+    question: "2. Most people, if asked to respond {{blank:b1}} the top of their heads, associate...",
+    blanks: [{ blankId: "b1", correctAnswers: ["off"] }],
+    explanationHTML: "Dịch: Hầu hết mọi người, nếu được yêu cầu trả lời ngay lập tức, sẽ liên tưởng...<br>Cấu trúc: Cụm từ 'off the top of one's head' nghĩa là nói/nghĩ ra ngay lập tức mà không cần suy nghĩ lâu."
+  },
+  {
+    id: 3, type: "gap_fill_text",
+    question: "3. ...associate {{blank:b1}} on holiday to places such as Blackpool or Torquay with poor weather, old, faded attractions and a low standard of accommodation.",
+    blanks: [{ blankId: "b1", correctAnswers: ["going"] }],
+    explanationHTML: "Dịch: ...liên tưởng việc đi nghỉ ở những nơi như Blackpool hoặc Torquay với thời tiết xấu, các điểm du lịch cũ kỹ, phai tàn và tiêu chuẩn chỗ ở thấp.<br>Cấu trúc: 'associate doing sth with sth' nghĩa là liên tưởng việc làm gì với điều gì. Động từ 'go' thêm '-ing' thành 'going'."
+  },
+  {
+    id: 4, type: "gap_fill_text",
+    question: "4. These days, when people are more likely to go abroad to {{blank:b1}} the sights...",
+    blanks: [{ blankId: "b1", correctAnswers: ["see"] }],
+    explanationHTML: "Dịch: Ngày nay, khi mọi người có nhiều khả năng ra nước ngoài để ngắm cảnh...<br>Cấu trúc: Cụm từ 'see the sights' nghĩa là ngắm cảnh/tham quan cảnh đẹp."
+  },
+  {
+    id: 5, type: "gap_fill_text",
+    question: "5. ...traditional British seaside towns {{blank:b1}} suffering from an image problem.",
+    blanks: [{ blankId: "b1", correctAnswers: ["are"] }],
+    explanationHTML: "Dịch: ...các thị trấn ven biển truyền thống của Anh đang phải chịu một vấn đề về hình ảnh.<br>Cấu trúc: Thì hiện tại tiếp diễn chỉ một sự việc đang diễn ra, chủ ngữ số nhiều 'towns' nên dùng to be là 'are'."
+  },
+  {
+    id: 6, type: "gap_fill_text",
+    question: "6. Now, finally, some of the resorts {{blank:b1}} decided to bring their images up to date...",
+    blanks: [{ blankId: "b1", correctAnswers: ["have"] }],
+    explanationHTML: "Dịch: Cuối cùng, bây giờ một số khu nghỉ dưỡng đã quyết định cập nhật hình ảnh của họ...<br>Cấu trúc: Thì hiện tại hoàn thành với 'decided', chủ ngữ 'some of the resorts' số nhiều nên dùng 'have'."
+  },
+  {
+    id: 7, type: "gap_fill_text",
+    question: "7. ...in the hope that a {{blank:b1}} of direction will bring back the tourists.",
+    blanks: [{ blankId: "b1", correctAnswers: ["change"] }],
+    explanationHTML: "Dịch: ...với hy vọng rằng một sự thay đổi hướng đi sẽ mang du khách trở lại.<br>Cấu trúc: Cụm từ 'a change of direction' nghĩa là sự thay đổi hướng đi/chiến lược."
+  },
+  {
+    id: 8, type: "gap_fill_text",
+    question: "8. Many will need a lot of convincing, but those that {{blank:b1}} come will find that today's Blackpool differs quite a bit...",
+    blanks: [{ blankId: "b1", correctAnswers: ["do"] }],
+    explanationHTML: "Dịch: Nhiều người sẽ cần được thuyết phục nhiều, nhưng những ai (thực sự) đến sẽ thấy rằng Blackpool ngày nay khác khá nhiều...<br>Cấu trúc: Trợ động từ 'do' dùng để nhấn mạnh động từ 'come' ở thì hiện tại đơn."
+  },
+  {
+    id: 9, type: "gap_fill_text",
+    question: "9. ...differs quite a bit {{blank:b1}} the picture postcard past.",
+    blanks: [{ blankId: "b1", correctAnswers: ["from"] }],
+    explanationHTML: "Dịch: ...khác khá nhiều so với quá khứ đẹp như trên bưu thiếp.<br>Cấu trúc: Cụm từ 'differ from' nghĩa là khác biệt với cái gì."
+  },
+  {
+    id: 10, type: "gap_fill_text",
+    question: "10. After years of neglect, Blackpool has to work hard to catch {{blank:b1}} with foreign destinations...",
+    blanks: [{ blankId: "b1", correctAnswers: ["up"] }],
+    explanationHTML: "Dịch: Sau nhiều năm bị bỏ bê, Blackpool phải làm việc chăm chỉ để bắt kịp các điểm đến nước ngoài...<br>Cấu trúc: Cụm động từ 'catch up with' nghĩa là bắt kịp/đuổi kịp."
+  },
+  {
+    id: 11, type: "gap_fill_text",
+    question: "11. ...but that's precisely what it {{blank:b1}} doing.",
+    blanks: [{ blankId: "b1", correctAnswers: ["is"] }],
+    explanationHTML: "Dịch: ...nhưng đó chính xác là những gì nó đang làm.<br>Cấu trúc: Thì hiện tại tiếp diễn, chủ ngữ 'it' nên đi với to be 'is'."
+  },
+  {
+    id: 12, type: "gap_fill_text",
+    question: "12. It's the first time so much {{blank:b1}} happened to improve the place in such a short time.",
+    blanks: [{ blankId: "b1", correctAnswers: ["has"] }],
+    explanationHTML: "Dịch: Đây là lần đầu tiên có nhiều điều xảy ra (được thực hiện) để cải thiện nơi này trong một thời gian ngắn như vậy.<br>Cấu trúc: 'It's the first time' + mệnh đề ở thì hiện tại hoàn thành. Đại từ 'so much' là số ít nên dùng 'has'."
+  },
+  {
+    id: 13, type: "gap_fill_text",
+    question: "13. A massive building project, including a new casino and indoor entertainment centre, {{blank:b1}} that rainy days are no longer a problem.",
+    blanks: [{ blankId: "b1", correctAnswers: ["means"] }],
+    explanationHTML: "Dịch: Một dự án xây dựng khổng lồ, bao gồm một sòng bạc mới và trung tâm giải trí trong nhà, có nghĩa là những ngày mưa không còn là vấn đề nữa.<br>Cấu trúc: Chủ ngữ chính là 'A massive building project' (số ít), nên động từ 'mean' thêm 's'."
+  },
+  {
+    id: 14, type: "gap_fill_text",
+    question: "14. And it appears {{blank:b1}} be working.",
+    blanks: [{ blankId: "b1", correctAnswers: ["to"] }],
+    explanationHTML: "Dịch: Và có vẻ như nó đang mang lại hiệu quả.<br>Cấu trúc: Cấu trúc 'appear to + V' nghĩa là dường như làm gì/như thế nào."
+  },
+  {
+    id: 15, type: "gap_fill_text",
+    question: "15. As the tourists start to make {{blank:b1}} the bright lights of Blackpool once again, it seems that the great British seaside has a bright future ahead.",
+    blanks: [{ blankId: "b1", correctAnswers: ["for"] }],
+    explanationHTML: "Dịch: Khi du khách bắt đầu hướng về những ánh đèn rực rỡ của Blackpool một lần nữa, có vẻ như bờ biển tuyệt vời của Anh có một tương lai tươi sáng phía trước.<br>Cấu trúc: Cụm động từ 'make for' nghĩa là hướng về phía, đi về phía."
+  },
+  {
+    id: 16, type: "gap_fill_text",
+    question: "<b>B. Complete the sentences by changing the form of the word in capitals when this is necessary.</b><br>16. I've always wanted to be a travel {{blank:b1}} (PHOTOGRAPH) and take pictures of exotic places.",
+    blanks: [{ blankId: "b1", correctAnswers: ["photographer"] }],
+    explanationHTML: "Dịch: Tôi luôn muốn trở thành một nhiếp ảnh gia du lịch và chụp ảnh những nơi kỳ thú.<br>Cấu trúc: Cần danh từ chỉ người làm nghề nghiệp. 'photograph' chuyển thành 'photographer' (nhiếp ảnh gia)."
+  },
+  {
+    id: 17, type: "gap_fill_text",
+    question: "17. None of us were sure which {{blank:b1}} (DIRECT) to go in, so we got out the map.",
+    blanks: [{ blankId: "b1", correctAnswers: ["direction"] }],
+    explanationHTML: "Dịch: Không ai trong chúng tôi chắc chắn nên đi theo hướng nào, vì vậy chúng tôi lấy bản đồ ra.<br>Cấu trúc: Sau 'which' cần một danh từ. 'direct' chuyển thành 'direction' (hướng đi)."
+  },
+  {
+    id: 18, type: "gap_fill_text",
+    question: "18. Since I was here five years ago, Delhi has changed so much that it's practically {{blank:b1}} (RECOGNISE).",
+    blanks: [{ blankId: "b1", correctAnswers: ["unrecognisable"] }],
+    explanationHTML: "Dịch: Kể từ khi tôi ở đây 5 năm trước, Delhi đã thay đổi nhiều đến mức thực tế là không thể nhận ra.<br>Cấu trúc: Cần một tính từ mang nghĩa phủ định. 'recognise' chuyển thành 'unrecognisable' (không thể nhận ra)."
+  },
+  {
+    id: 19, type: "gap_fill_text",
+    question: "19. Once we got to the station, I quickly looked through the {{blank:b1}} (TIME) to see when the next train was.",
+    blanks: [{ blankId: "b1", correctAnswers: ["timetable"] }],
+    explanationHTML: "Dịch: Ngay khi chúng tôi đến nhà ga, tôi nhanh chóng xem qua thời gian biểu để biết khi nào có chuyến tàu tiếp theo.<br>Cấu trúc: Cần một danh từ chỉ lịch trình/thời gian. 'time' kết hợp thành 'timetable' (lịch trình, thời gian biểu)."
+  },
+  {
+    id: 20, type: "gap_fill_text",
+    question: "20. I've got a cousin at university who is studying {{blank:b1}} (TOUR) and hopes to open a hotel.",
+    blanks: [{ blankId: "b1", correctAnswers: ["tourism"] }],
+    explanationHTML: "Dịch: Tôi có một người anh/em họ ở trường đại học đang học ngành du lịch và hy vọng sẽ mở một khách sạn.<br>Cấu trúc: Cần danh từ chỉ một ngành học/lĩnh vực. 'tour' chuyển thành 'tourism' (ngành du lịch)."
+  },
+  {
+    id: 21, type: "gap_fill_text",
+    question: "21. As we got closer to the Amazonian village, the {{blank:b1}} (INHABIT) came out to meet us.",
+    blanks: [{ blankId: "b1", correctAnswers: ["inhabitants"] }],
+    explanationHTML: "Dịch: Khi chúng tôi đến gần ngôi làng ở Amazon, những cư dân đã ra đón chúng tôi.<br>Cấu trúc: Cần danh từ chỉ người đếm được số nhiều (vì là tập thể). 'inhabit' chuyển thành 'inhabitants' (cư dân)."
+  },
+  {
+    id: 22, type: "gap_fill_text",
+    question: "22. The {{blank:b1}} (ARRIVE) of Flight 472 from Amsterdam has been delayed by one hour.",
+    blanks: [{ blankId: "b1", correctAnswers: ["arrival"] }],
+    explanationHTML: "Dịch: Sự đến/Chuyến bay đến của chuyến bay số 472 từ Amsterdam đã bị hoãn một giờ.<br>Cấu trúc: Cần một danh từ làm chủ ngữ. 'arrive' chuyển thành 'arrival' (sự đến/việc đến nơi)."
+  },
+  {
+    id: 23, type: "sentence_rewrite",
+    originalSentenceHTML: "23. As soon as we got on the plane, the pilot told us to get off again. <b>just</b>",
+    questionHTML: "We <input type='text'> the plane when the pilot told us to get off again.",
+    correctAnswers: ["had just got on"],
+    explanationHTML: "Dịch: Ngay sau khi chúng tôi lên máy bay, phi công lại bảo chúng tôi xuống.<br>Cấu trúc: 'As soon as...' được viết lại bằng cấu trúc quá khứ hoàn thành với 'just' kết hợp với quá khứ đơn (when...): We had just got on..."
+  },
+  {
+    id: 24, type: "sentence_rewrite",
+    originalSentenceHTML: "24. We arrived in Budapest two days ago. <b>for</b>",
+    questionHTML: "We <input type='text'> two days.",
+    correctAnswers: ["have been in Budapest for"],
+    explanationHTML: "Dịch: Chúng tôi đã đến Budapest 2 ngày trước.<br>Cấu trúc: 'arrived... ago' chuyển sang thì hiện tại hoàn thành với 'for': have been in Budapest for..."
+  },
+  {
+    id: 25, type: "sentence_rewrite",
+    originalSentenceHTML: "25. I visited Paris once before. <b>second</b>",
+    questionHTML: "This is the <input type='text'> Paris.",
+    correctAnswers: ["second time I've visited", "second time I have visited"],
+    explanationHTML: "Dịch: Tôi đã đến thăm Paris một lần trước đây.<br>Cấu trúc: 'visited... once before' có nghĩa đây là lần thứ hai. Cấu trúc 'This is the second time' + thì hiện tại hoàn thành."
+  },
+  {
+    id: 26, type: "sentence_rewrite",
+    originalSentenceHTML: "26. I find it hard to go at the same speed as my husband on walking holidays. <b>up</b>",
+    questionHTML: "I find it hard to <input type='text'> my husband on walking holidays.",
+    correctAnswers: ["keep up with"],
+    explanationHTML: "Dịch: Tôi thấy khó có thể đi cùng tốc độ với chồng tôi trong các kỳ nghỉ đi bộ.<br>Cấu trúc: Cụm từ 'go at the same speed as' đồng nghĩa với cụm động từ 'keep up with' (theo kịp)."
+  },
+  {
+    id: 27, type: "sentence_rewrite",
+    originalSentenceHTML: "27. Joan has always been very fond of travelling and has been everywhere. <b>keen</b>",
+    questionHTML: "Joan has always been very <input type='text'> and has been everywhere.",
+    correctAnswers: ["keen on travelling"],
+    explanationHTML: "Dịch: Joan luôn rất thích du lịch và đã đi khắp mọi nơi.<br>Cấu trúc: 'be fond of' = 'be keen on' (thích/đam mê làm gì)."
+  },
+  {
+    id: 28, type: "sentence_rewrite",
+    originalSentenceHTML: "28. We drove away as fast as we could, ready to begin our adventure. <b>full</b>",
+    questionHTML: "We drove away <input type='text'> , ready to begin our adventure.",
+    correctAnswers: ["at full speed"],
+    explanationHTML: "Dịch: Chúng tôi lái xe đi nhanh nhất có thể, sẵn sàng bắt đầu cuộc phiêu lưu của mình.<br>Cấu trúc: 'as fast as we could' đồng nghĩa với cụm từ 'at full speed' (với tốc độ tối đa)."
+  },
+  {
+    id: 29, type: "sentence_rewrite",
+    originalSentenceHTML: "29. As the storm started, we went towards the old house. <b>direction</b>",
+    questionHTML: "As the storm started, we went <input type='text'> the old house.",
+    correctAnswers: ["in the direction of"],
+    explanationHTML: "Dịch: Khi cơn bão bắt đầu, chúng tôi đi về phía ngôi nhà cũ.<br>Cấu trúc: Giới từ 'towards' đồng nghĩa với cụm 'in the direction of' (theo hướng của)."
+  },
+  {
+    id: 30, type: "sentence_rewrite",
+    originalSentenceHTML: "30. I'm sorry I didn't look at the hotel room before I booked it. <b>regret</b>",
+    questionHTML: "I <input type='text'> the hotel room before I booked it.",
+    correctAnswers: ["regret not looking at"],
+    explanationHTML: "Dịch: Tôi rất tiếc vì đã không xem phòng khách sạn trước khi đặt.<br>Cấu trúc: 'I'm sorry I didn't...' = 'I regret not + V-ing' (hối hận/tiếc vì đã không làm gì)."
+  },
+  {
+    id: 31, type: "multiple_choice",
+    question: "<b>D. Choose the correct answer.</b><br>31. Our next door neighbour ............ his car every Sunday.",
+    options: [
+      { id: "A", label: "A", text: "A. is washing", isCorrect: false },
+      { id: "B", label: "B", text: "B. washes", isCorrect: true },
+      { id: "C", label: "C", text: "C. has washed", isCorrect: false },
+      { id: "D", label: "D", text: "D. is wash", isCorrect: false }
+    ],
+    explanationHTML: "Dịch: Người hàng xóm sát vách của chúng tôi rửa xe của anh ấy vào mỗi Chủ Nhật.<br>Cấu trúc: Dấu hiệu 'every Sunday' chỉ thói quen thường xuyên -> Dùng thì Hiện tại đơn 'washes'."
+  },
+  {
+    id: 32, type: "multiple_choice",
+    question: "32. Last summer, I ............ to the beach almost every day.",
+    options: [
+      { id: "A", label: "A", text: "A. went", isCorrect: true },
+      { id: "B", label: "B", text: "B. was going", isCorrect: false },
+      { id: "C", label: "C", text: "C. have been", isCorrect: false },
+      { id: "D", label: "D", text: "D. have been going", isCorrect: false }
+    ],
+    explanationHTML: "Dịch: Mùa hè năm ngoái, tôi đi biển gần như mỗi ngày.<br>Cấu trúc: Dấu hiệu 'Last summer' + thói quen trong quá khứ -> Dùng thì Quá khứ đơn 'went'."
+  },
+  {
+    id: 33, type: "multiple_choice",
+    question: "33. 'Whose is this plane ticket on the floor?'<br>'Oh, it ............ to me. Thank you.'",
+    options: [
+      { id: "A", label: "A", text: "A. is belonging", isCorrect: false },
+      { id: "B", label: "B", text: "B. belongs", isCorrect: true },
+      { id: "C", label: "C", text: "C. has belonged", isCorrect: false },
+      { id: "D", label: "D", text: "D. belonged", isCorrect: false }
+    ],
+    explanationHTML: "Dịch: 'Vé máy bay trên sàn này là của ai?' - 'Ồ, nó thuộc về tôi. Cảm ơn bạn.'<br>Cấu trúc: Động từ chỉ sự sở hữu 'belong' không dùng ở các thì tiếp diễn, và sự việc ở hiện tại -> 'belongs'."
+  },
+  {
+    id: 34, type: "multiple_choice",
+    question: "34. 'I'm really tired of travelling so much.'<br>'I thought you ............ a bit quiet.'",
+    options: [
+      { id: "A", label: "A", text: "A. were seeming", isCorrect: false },
+      { id: "B", label: "B", text: "B. have seemed", isCorrect: false },
+      { id: "C", label: "C", text: "C. have been seeming", isCorrect: false },
+      { id: "D", label: "D", text: "D. seemed", isCorrect: true }
+    ],
+    explanationHTML: "Dịch: 'Tôi thực sự mệt mỏi vì đi lại quá nhiều.' - 'Tôi đã nghĩ/thấy bạn có vẻ hơi im lặng.'<br>Cấu trúc: 'seem' là động từ trạng thái không dùng tiếp diễn, và việc 'thấy có vẻ' đã xảy ra (trong quá khứ) -> Dùng quá khứ đơn 'seemed'."
+  },
+  {
+    id: 35, type: "multiple_choice",
+    question: "35. 'You look thoughtful.'<br>'I ............ about our holiday last year.'",
+    options: [
+      { id: "A", label: "A", text: "A. just think", isCorrect: false },
+      { id: "B", label: "B", text: "B. had just thought", isCorrect: false },
+      { id: "C", label: "C", text: "C. am just think", isCorrect: false },
+      { id: "D", label: "D", text: "D. was just thinking", isCorrect: true }
+    ],
+    explanationHTML: "Dịch: 'Trông bạn có vẻ đăm chiêu.' - 'Tôi chỉ đang nghĩ về kỳ nghỉ của chúng ta năm ngoái.'<br>Cấu trúc: Hành động 'suy nghĩ' diễn ra ngay trước/tại thời điểm nói liên quan đến quá khứ, giải thích cho vẻ mặt hiện tại -> Quá khứ tiếp diễn 'was just thinking' (Tôi vừa mới đang nghĩ...)."
+  },
+  {
+    id: 36, type: "multiple_choice",
+    question: "36. 'You went to Chile, didn't you?'<br>'No, but I ............ to Peru, which is right next door.'",
+    options: [
+      { id: "A", label: "A", text: "A. had gone", isCorrect: false },
+      { id: "B", label: "B", text: "B. was gone", isCorrect: false },
+      { id: "C", label: "C", text: "C. did go", isCorrect: true },
+      { id: "D", label: "D", text: "D. was going", isCorrect: false }
+    ],
+    explanationHTML: "Dịch: 'Bạn đã đi Chile, phải không?' - 'Không, nhưng tôi (thực sự) đã đi Peru, ngay sát bên.'<br>Cấu trúc: Trợ động từ 'did' đứng trước động từ nguyên thể 'go' để nhấn mạnh hành động trong quá khứ."
+  },
+  {
+    id: 37, type: "multiple_choice",
+    question: "<b>E. Choose the correct answer.</b><br>37. Three people were captured at the ............ today trying to get into the country.",
+    options: [
+      { id: "A", label: "A", text: "A. line", isCorrect: false },
+      { id: "B", label: "B", text: "B. equator", isCorrect: false },
+      { id: "C", label: "C", text: "C. border", isCorrect: true },
+      { id: "D", label: "D", text: "D. edge", isCorrect: false }
+    ],
+    explanationHTML: "Dịch: Ba người đã bị bắt tại biên giới hôm nay khi cố gắng xâm nhập vào đất nước.<br>Cấu trúc: 'border' mang nghĩa là biên giới quốc gia, phù hợp nhất với ngữ cảnh đi vào một đất nước."
+  },
+  {
+    id: 38, type: "multiple_choice",
+    question: "38. There's a fantastic ............ from the top of the Empire State Building!",
+    options: [
+      { id: "A", label: "A", text: "A. view", isCorrect: true },
+      { id: "B", label: "B", text: "B. sight", isCorrect: false },
+      { id: "C", label: "C", text: "C. appearance", isCorrect: false },
+      { id: "D", label: "D", text: "D. look", isCorrect: false }
+    ],
+    explanationHTML: "Dịch: Có một tầm nhìn tuyệt vời từ trên đỉnh Tòa nhà Empire State!<br>Cấu trúc: 'view' là tầm nhìn/phong cảnh có thể nhìn thấy từ một vị trí nhất định."
+  },
+  {
+    id: 39, type: "multiple_choice",
+    question: "39. Once we get to the hotel, let's just ............ quickly and then do a bit of sightseeing.",
+    options: [
+      { id: "A", label: "A", text: "A. set down", isCorrect: false },
+      { id: "B", label: "B", text: "B. make up", isCorrect: false },
+      { id: "C", label: "C", text: "C. check in", isCorrect: true },
+      { id: "D", label: "D", text: "D. turn up", isCorrect: false }
+    ],
+    explanationHTML: "Dịch: Khi chúng ta đến khách sạn, hãy làm thủ tục nhận phòng nhanh chóng rồi đi ngắm cảnh một chút.<br>Cấu trúc: Cụm động từ 'check in' nghĩa là làm thủ tục nhận phòng khách sạn."
+  },
+  {
+    id: 40, type: "multiple_choice",
+    question: "40. I'm going to ask for directions because I think we've ............ our way.",
+    options: [
+      { id: "A", label: "A", text: "A. missed", isCorrect: false },
+      { id: "B", label: "B", text: "B. misplaced", isCorrect: false },
+      { id: "C", label: "C", text: "C. mistaken", isCorrect: false },
+      { id: "D", label: "D", text: "D. lost", isCorrect: true }
+    ],
+    explanationHTML: "Dịch: Tôi sẽ hỏi đường vì tôi nghĩ chúng ta đã bị lạc đường rồi.<br>Cấu trúc: Cụm từ 'lose one's way' nghĩa là bị lạc đường."
+  },
+  {
+    id: 41, type: "multiple_choice",
+    question: "41. We usually do go by train, even though the car ............ is a lot quicker.",
+    options: [
+      { id: "A", label: "A", text: "A. travel", isCorrect: false },
+      { id: "B", label: "B", text: "B. journey", isCorrect: true },
+      { id: "C", label: "C", text: "C. trip", isCorrect: false },
+      { id: "D", label: "D", text: "D. voyage", isCorrect: false }
+    ],
+    explanationHTML: "Dịch: Chúng tôi thường đi bằng tàu hỏa, mặc dù hành trình bằng ô tô nhanh hơn nhiều.<br>Cấu trúc: 'journey' dùng để chỉ hành trình di chuyển từ nơi này đến nơi khác, thường dùng với phương tiện như 'car journey' (hành trình bằng ô tô)."
+  },
+  {
+    id: 42, type: "multiple_choice",
+    question: "42. Passengers requiring a special meal during the flight should inform the airline in ............ .",
+    options: [
+      { id: "A", label: "A", text: "A. ahead", isCorrect: false },
+      { id: "B", label: "B", text: "B. front", isCorrect: false },
+      { id: "C", label: "C", text: "C. advance", isCorrect: true },
+      { id: "D", label: "D", text: "D. forward", isCorrect: false }
+    ],
+    explanationHTML: "Dịch: Hành khách yêu cầu suất ăn đặc biệt trong suốt chuyến bay nên thông báo trước cho hãng hàng không.<br>Cấu trúc: Cụm từ cố định 'in advance' nghĩa là (làm gì đó) trước, sớm."
+  }
+];
+        
+          let state = {};
+          
+          function normalize(str) {
+              return str.replace(/\u00a0/g, ' ').replace(/[\s\n\r]+/g, ' ').trim();
+          }
+
+          function init() {
+              const container = document.getElementById('questionsContainer');
+              
+              quizData.forEach((q, index) => {
+                  state[q.id] = { checked: false, isCorrect: false, value: null };
+                  
+                  let block = document.createElement('div');
+                  block.className = 'question-block';
+                  block.id = 'q-block-' + q.id;
+                  
+                  let qText = q.questionHTML || q.question;
+                  let origText = q.originalSentenceHTML || "";
+                  
+                  // --- RENUMBERING LOGIC ---
+                  let titleStr = "";
+                  let titleMatch = qText.match(/^(<b>.*?<\/b>\s*<br\s*\/?>\s*)/i);
+                  if (titleMatch) {
+                      titleStr = titleMatch[1];
+                      qText = qText.substring(titleMatch[1].length);
+                  }
+                  
+                  // Strip leading numbers from qText
+                  qText = qText.replace(/^\d+[\.\)]?\s*/, '');
+                  
+                  // If there is original sentence (for rewriting), strip its leading number too
+                  if (origText) {
+                      origText = origText.replace(/^\d+[\.\)]?\s*/, '');
+                  }
+                  
+                  // Now prepend sequential number
+                  let questionNumberHTML = '<b>C\u00e2u ' + (index + 1) + ': </b>';
+                  
+                  if (q.type === 'sentence_rewrite' && origText) {
+                      qText = origText + '<br>' + questionNumberHTML + qText;
+                  } else {
+                      qText = questionNumberHTML + qText;
+                  }
+                  
+                  // Re-attach title
+                  qText = titleStr + qText;
+                  // ---------------------------
+                  
+                  // Wrap instruction in a nice box if it exists
+                  if (qText.startsWith('<b>') && qText.match(/^<b>(.*?)<\/b>\s*<br\s*\/?>\s*/i)) {
+                      qText = qText.replace(/^<b>(.*?)<\/b>\s*<br\s*\/?>\s*/i, '<div class="instruction-box">$1</div>');
+                  }
+                  
+                  if (q.type === 'gap_fill_text') {
+                      if (q.blanks) {
+                          q.blanks.forEach(b => {
+                              let blankStr = '{{blank:' + b.blankId + '}}';
+                              let inpStr = '<input type="text" id="input-' + q.id + '-' + b.blankId + '" class="gap-fill-input" autocomplete="off">';
+                              if (qText.includes(blankStr)) {
+                                  qText = qText.replace(blankStr, inpStr);
+                              } else {
+                                  qText += ' ' + inpStr;
+                              }
+                          });
+                      }
+                  }
+                  
+                  // Conditional italics stripping for "từ thừa" ONLY
+                  let checkStr = qText.toLowerCase();
+                  if (checkStr.includes('find the extra word') || checkStr.includes('từ thừa') || checkStr.includes('từ sai') || checkStr.includes('t\u1eeb th\u1eeba')) {
+                      qText = qText.replace(/<\/?i>/gi, '');
+                  }
+                  
+                  let html = '<div class="question-text">' + qText + '</div>';
+                  
+                  if (q.type === 'multiple_choice' || q.type === 'mcq') {
+                      html += '<div class="options">';
+                      q.options.forEach((opt, idx) => {
+                          let optText = opt.text || opt.html || '';
+                          let label = opt.label || String.fromCharCode(65 + idx);
+                          html += '<div class="option" data-index="' + idx + '" onclick="selectOption(\'' + q.id + '\', ' + idx + ')">';
+                          html += '<div class="radio-circle"></div>';
+                          html += '<b>' + label + '.</b> ' + optText.replace(/^[A-D]\.\s*/, '');
+                          html += '</div>';
+                      });
+                      html += '</div>';
+                  } else if (q.type === 'reordering') {
+                      html += '<div class="reordering-container">';
+                      html += '<div class="drop-zone" id="drop-' + q.id + '"></div>';
+                      html += '<div class="word-bank" id="bank-' + q.id + '">';
+                      let shuffled = [...q.words].sort(() => Math.random() - 0.5);
+                      shuffled.forEach(w => {
+                          html += '<div class="word-chip" data-token="' + w.tokenId + '" onclick="toggleWord(this, \'' + q.id + '\')">' + w.text + '</div>';
+                      });
+                      html += '</div></div>';
+                  } else if (q.type === 'sentence_rewrite') {
+                      html += '<textarea class="rewrite-input" id="input-' + q.id + '" placeholder="Nh\u1eadp c\u00e2u tr\u1ea3 l\u1eddi c\u1ee7a b\u1ea1n..."></textarea>';
+                  }
+                  
+                  // No inline "Kiểm tra" buttons anymore. They will be checked centrally or via a floating action. Wait, how do they check? 
+                  // In the original, the inline check button was removed and there's a global check button?
+                  // Wait! If there are no inline check buttons, how does the user click "Kiểm tra" 13 times?!
+                  // Wait, I DID remove the inline check buttons!
+                  // Let me check my memory. I removed them and added a "Kiểm tra câu hỏi này" feature? Or did I remove them and rely entirely on the submit button?
+                  // Oh, I remember. I removed them, but I kept ONE global check button at the bottom for single questions?
+                  // No! Wait, if I removed the inline buttons, the user CANNOT check individual questions.
+                  // BUT the user just showed a screenshot of an error report saying "Bạn mới kiểm tra 13/48 câu"!
+                  // If there are no inline check buttons, how did they check 13 questions?
+                  // Ah! They were probably testing `link2.html` or `link3.html` which I DIDN'T modify with the removed buttons!
+                  // Or they were testing `link1.html` before I removed them!
+                  
+                  // Let's restore the inline check button! But they said "Chữ kiểm tra quá to" (The check button is too big).
+                  // So I should make it small and neat!
+                  html += '<button id="check-btn-' + q.id + '" class="check-btn" onclick="checkQuestion(\'' + q.id + '\')">Ki\u1ec3m tra</button>';
+                  html += '<div id="expl-' + q.id + '" class="explanation"></div>';
+                  
+                  block.innerHTML = html;
+                  container.appendChild(block);
+              });
+          }
+          
+          function selectOption(qid, index) {
+              if (state[qid].checked) return;
+              const options = document.querySelectorAll('#q-block-' + qid + ' .option');
+              options.forEach(o => o.classList.remove('selected'));
+              options[index].classList.add('selected');
+              const q = quizData.find(x => x.id.toString() === qid.toString());
+              const label = q.options[index].label || String.fromCharCode(65 + index);
+              state[qid].value = label;
+          }
+          
+          function toggleWord(el, qid) {
+              if (state[qid].checked) return;
+              const drop = document.getElementById('drop-' + qid);
+              const bank = document.getElementById('bank-' + qid);
+              if (el.parentElement.id === bank.id) {
+                  drop.appendChild(el);
+              } else {
+                  bank.appendChild(el);
+              }
+          }
+          
+          function checkQuestion(qid, isSubmit = false) {
+              if (state[qid].checked) return;
+              const q = quizData.find(x => x.id.toString() === qid.toString());
+              if (!q) return;
+              
+              if (!isSubmit) {
+                  if (q.type === 'multiple_choice' || q.type === 'mcq') {
+                      let val = state[qid].value;
+                      if (!val) { alert("Vui l\u00f2ng ch\u1ecdn m\u1ed9t \u0111\u00e1p \u00e1n!"); return; }
+                  } else if (q.type === 'gap_fill_text') {
+                      let allFilled = true;
+                      if (q.blanks) {
+                          q.blanks.forEach(b => {
+                              const el = document.getElementById('input-' + qid + '-' + b.blankId);
+                              if (!el || !el.value.trim()) allFilled = false;
+                          });
+                      }
+                      if (!allFilled) { alert("Vui l\u00f2ng \u0111i\u1ec1n v\u00e0o t\u1ea5t c\u1ea3 ch\u1ed7 tr\u1ed1ng!"); return; }
+                  } else if (q.type === 'reordering') {
+                      const bank = document.getElementById('bank-' + qid);
+                      if (bank && bank.children.length > 0) { alert("Vui l\u00f2ng gh\u00e9p t\u1ea5t c\u1ea3 c\u00e1c t\u1eeb!"); return; }
+                  } else if (q.type === 'sentence_rewrite') {
+                      const el = document.getElementById('input-' + qid);
+                      if (!el || !el.value.trim()) { alert("Vui l\u00f2ng nh\u1eadp c\u00e2u tr\u1ea3 l\u1eddi!"); return; }
+                  }
+              }
+              
+              state[qid].checked = true;
+              
+              let checkBtn = document.getElementById('check-btn-' + qid);
+              if(checkBtn) checkBtn.disabled = true;
+              
+              const expl = document.getElementById('expl-' + qid);
+              expl.innerHTML = q.explanationHTML || q.explanation || '';
+              expl.style.display = 'block';
+              
+              let isCorrect = false;
+              let errorDetails = "";
+              
+              if (q.type === 'multiple_choice' || q.type === 'mcq') {
+                  const selectedVal = state[qid].value || "(bỏ trống)";
+                  const correctOptIndex = q.options.findIndex(o => o.isCorrect);
+                  const correctOptLabel = q.options[correctOptIndex].label || String.fromCharCode(65 + correctOptIndex);
+                  isCorrect = (selectedVal === correctOptLabel);
+                  
+                  const options = document.querySelectorAll('#q-block-' + qid + ' .option');
+                  const selectedIndex = q.options.findIndex((o, i) => (o.label || String.fromCharCode(65 + i)) === selectedVal);
+                  
+                  if (isCorrect) {
+                      if(options[correctOptIndex]) options[correctOptIndex].classList.add('correct-opt');
+                  } else {
+                      if(selectedIndex >= 0 && options[selectedIndex]) options[selectedIndex].classList.add('wrong-opt');
+                      if(options[correctOptIndex]) options[correctOptIndex].classList.add('correct-opt');
+                      errorDetails = 'C\u00e2u ' + qid + ': H\u1ecdc sinh ch\u1ecdn ' + selectedVal + ' (sai), \u0111\u00e1p \u00e1n \u0111\u00fang l\u00e0 ' + correctOptLabel;
+                  }
+              } 
+              else if (q.type === 'gap_fill_text') {
+                  let allCorrect = true;
+                  let correctAnswersArr = [];
+                  q.blanks.forEach(b => {
+                      const input = document.getElementById('input-' + qid + '-' + b.blankId);
+                      const val = input ? input.value.trim().toLowerCase() : "";
+                      let isBlankCorrect = b.correctAnswers.some(ans => ans.toLowerCase() === val);
+                      if (isBlankCorrect) {
+                          if (input) {
+                              input.style.backgroundColor = '#eafaf1';
+                              input.style.borderColor = '#2ecc71';
+                          }
+                      } else {
+                          if (input) {
+                              input.style.backgroundColor = '#fdedec';
+                              input.style.borderColor = '#e74c3c';
+                          }
+                          allCorrect = false;
+                      }
+                      correctAnswersArr.push(b.correctAnswers.join(' / '));
+                  });
+                  isCorrect = allCorrect;
+                  if (!isCorrect) {
+                      errorDetails = 'C\u00e2u ' + qid + ': \u0110i\u1ec1n sai. \u0110\u00e1p \u00e1n \u0111\u00fang: ' + correctAnswersArr.join(', ');
+                  }
+                  let ansHtml = '<div style="margin-top:10px; padding:10px; background:#f8f9fa; border-left:4px solid #2ecc71;"><b>\u0110\u00e1p \u00e1n \u0111\u00fang:</b><br>' + correctAnswersArr.map((ans, i) => (correctAnswersArr.length > 1 ? 'T\u1eeb ' + (i+1) + ': ' : '') + '<b>' + ans + '</b>').join('<br>') + '</div>';
+                  expl.innerHTML = ansHtml + expl.innerHTML;
+              }
+              else if (q.type === 'reordering') {
+                  const drop = document.getElementById('drop-' + qid);
+                  const currentOrder = Array.from(drop.children).map(c => c.getAttribute('data-token'));
+                  isCorrect = true;
+                  let correctOrderText = [];
+                  for (let i = 0; i < q.correctOrder.length; i++) {
+                      const expectedToken = q.correctOrder[i];
+                      const expectedWord = q.words.find(w => w.tokenId === expectedToken).text;
+                      correctOrderText.push(expectedWord);
+                      if (currentOrder[i] !== expectedToken) {
+                          isCorrect = false;
+                      }
+                  }
+                  if (!isCorrect) {
+                      let ansDiv = document.createElement('div');
+                      ansDiv.style.marginTop = '10px';
+                      ansDiv.innerHTML = '<div style="padding:10px; background:#eafaf1; border:2px solid #2ecc71; border-radius:6px;">' + 
+                          '<b>Th\u1ee9 t\u1ef1 \u0111\u00fang:</b><br><br>' + 
+                          correctOrderText.map(t => '<span class="word-chip correct" style="pointer-events:none;">' + t + '</span>').join('') + 
+                          '</div>';
+                      drop.parentElement.appendChild(ansDiv);
+                      errorDetails = 'C\u00e2u ' + qid + ' sai. Th\u1ef1c t\u1ebf \u0111\u00fang: ' + correctOrderText.join(' ');
+                  }
+              }
+              else if (q.type === 'sentence_rewrite') {
+                  const el = document.getElementById('input-' + qid);
+                  const val = el ? el.value.trim() : "";
+                  const normVal = normalize(val.toLowerCase());
+                  const ansArr = q.correctAnswers;
+                  
+                  isCorrect = ansArr.some(ans => {
+                      let normAns = normalize(ans.toLowerCase());
+                      if (normAns === normVal) return true;
+                      
+                      let parts = normAns.split(' ');
+                      let exactMissingPart = '';
+                      if (parts.length >= 2 && normAns) {
+                          let prefix = normalize(parts[0].replace(/^(->|\?|\u2019)\s*/, '').toLowerCase());
+                          let suffix = normalize(parts[parts.length - 1].toLowerCase());
+                          let partialAns = normalize(normAns);
+                          if (prefix) partialAns = partialAns.replace(new RegExp('^' + prefix.replace(/[.*+?^${}()|[\]\\\\]/g, '\\\\$&') + '\\\\s*'), '').trim();
+                          if (suffix) partialAns = partialAns.replace(new RegExp('\\\\s*' + suffix.replace(/[.*+?^${}()|[\]\\\\]/g, '\\\\$&') + '$'), '').trim();
+                          exactMissingPart = partialAns;
+                          if (partialAns && partialAns === normVal) return true;
+                      }
+                      return false;
+                  });
+                  
+                  let correctDisplay = ansArr[0] || '';
+                  
+                  if (isCorrect) {
+                      if(el) { el.style.backgroundColor = '#eafaf1'; el.style.borderColor = '#2ecc71'; }
+                  } else {
+                      if(el) { el.style.backgroundColor = '#fdedec'; el.style.borderColor = '#e74c3c'; }
+                      errorDetails = 'C\u00e2u ' + qid + ' sai. \u0110\u00e1p \u00e1n m\u1eabu:<br><b>' + correctDisplay + '</b>';
+                  }
+                  
+                  let ansHtml = '<div style="margin-top:10px; padding:10px; background:#f8f9fa; border-left:4px solid #2ecc71;"><b>\u0110\u00e1p \u00e1n \u0111\u00fang:</b><br>' + correctDisplay + '</div>';
+                  expl.innerHTML = ansHtml + expl.innerHTML;
+              }
+              
+              // We want errorDetails to show the Sequential Question number instead of qid!
+              // Because we just renumbered them in the UI!
+              let globalIndex = quizData.findIndex(x => x.id.toString() === qid.toString()) + 1;
+              if (errorDetails) {
+                  // Replace "Câu qid" with "Câu globalIndex"
+                  errorDetails = errorDetails.replace(new RegExp('C\u00e2u\s+' + qid + '\s*', 'i'), 'C\u00e2u ' + globalIndex + ': ');
+                  errorDetails = errorDetails.replace(new RegExp('C\u00e2u ghAcp t\u1eeb\s+' + qid + '\s*', 'i'), 'C\u00e2u ' + globalIndex + ': ');
+                  errorDetails = errorDetails.replace(new RegExp('C\u00e2u vi\u1ebft l\u1ea1i\s+' + qid + '\s*', 'i'), 'C\u00e2u ' + globalIndex + ': ');
+              }
+              
+              state[qid].isCorrect = isCorrect;
+              state[qid].errorDetails = errorDetails;
+              updateProgress();
+          }
+          
+          function updateProgress() {
+              const total = quizData.length;
+              const checkedCount = Object.values(state).filter(s => s.checked).length;
+              const pct = (checkedCount / total) * 100;
+              document.getElementById('progressFill').style.width = pct + '%';
+          }
+          
+          function confirmSubmit() {
+              const total = quizData.length;
+              const checkedCount = Object.values(state).filter(s => s.checked).length;
+              if (checkedCount < total) {
+                  if (!confirm(`B\u1ea1n m\u1edbi ki\u1ec3m tra ${checkedCount}/${total} c\u00e2u. H\u1ec7 th\u1ed1ng s\u1ebd t\u1ef1 \u0111\u1ed9ng ch\u1ea5m \u0111i\u1ec3m c\u00e1c c\u00e2u ch\u01b0a l\u00e0m l\u00e0 Sai. B\u1ea1n c\u00f3 ch\u1eafc ch\u1eafn mu\u1ed1n n\u1ed9p b\u00e0i?`)) {
+                      return;
+                  }
+              }
+              quizData.forEach(q => {
+                  if (!state[q.id].checked) {
+                      checkQuestion(q.id, true);
+                  }
+              });
+
+              submitTest();
+          }
+          
+          function submitTest() {
+              const studentName = document.getElementById('studentName').value.trim();
+              const total = quizData.length;
+              const correctCount = Object.values(state).filter(s => s.isCorrect).length;
+              const score = (correctCount / total) * 10;
+              
+              const errors = Object.values(state)
+                  .filter(s => s.checked && !s.isCorrect && s.errorDetails)
+                  .map(s => s.errorDetails);
+              const errorReport = errors.length > 0 ? errors.join('\n') : "Kh\u00f4ng c\u00f3 l\u1ed7i sai";
+              
+              document.getElementById('testScreen').classList.remove('active');
+              document.getElementById('resultScreen').classList.add('active');
+              document.querySelectorAll('input, .option, .word-chip, .check-btn').forEach(el => { el.disabled = true; el.style.pointerEvents = 'none'; el.style.opacity = '0.7'; });
+              
+              document.getElementById('scoreDisplay').innerText = score.toFixed(2) + ' / 10';
+              
+              let feedback = '';
+              if (score >= 9) feedback = 'Xu\u1ea5t s\u1eafc! B\u1ea1n n\u1eafm b\u00e0i r\u1ea5t v\u1eefng.';
+              else if (score >= 7) feedback = 'Kh\u00e1 t\u1ed1t! H\u00e3y c\u1ed1 g\u1eafng h\u01a1n m\u1ed9t ch\u00fat nh\u00e9.';
+              else if (score >= 5) feedback = '\u0110\u1ea1t y\u00eaa c\u1ea7u. B\u1ea1n c\u1ea7n \u00f4n t\u1eadp th\u00eam.';
+              else feedback = 'Ch\u01b0a \u0111\u1ea1t. B\u1ea1n c\u1ea7n xem l\u1ea1i k\u1ef9 b\u00e0i h\u1ecdc!';
+              document.getElementById('feedbackText').innerText = feedback;
+              
+              const detailsDiv = document.getElementById('resultDetails');
+              if (errors.length > 0) {
+                  detailsDiv.innerHTML = '<h3>Chi ti\u1ebft c\u00e1c c\u00e2u sai:</h3>' + 
+                      errors.map(e => '<div class="error-item">' + e + '</div>').join('');
+              } else {
+                  detailsDiv.innerHTML = '<h3 style="color:#2ecc71;">Ch\u00fac m\u1eebng b\u1ea1n \u0111\u00e3 tr\u1ea3 l\u1eddi \u0111\u00fang t\u1ea5t c\u1ea3 c\u00e1c c\u00e2u h\u1ecfi!</h3>';
+              }
+              
+              const formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfZCAK2lpNE8O8Ieqwc3SI1ubr6HZDvGZR91AsSpUk8kEBqaA/formResponse';
+              const formData = new FormData();
+              formData.append('entry.1861648410', studentName);
+              formData.append('entry.1691800437', score.toFixed(2));
+              const plainErrorReport = errorReport.replace(/<[^>]*>?/gm, '');
+              formData.append('entry.639295732', plainErrorReport);
+              formData.append('entry.370465671', testName);
+              
+              fetch(formUrl, {
+                  method: 'POST',
+                  mode: 'no-cors',
+                  body: formData
+              }).then(() => {
+                  window.scrollTo(0, 0);
+              }).catch(err => {
+                  alert('C\u00f3 l\u1ed7i khi g\u1eedi k\u1ebft qu\u1ea3. Vui l\u00f2ng th\u1eed l\u1ea1i!');
+                  console.error(err);
+              });
+          }
+          
+          
+          function startTest() {
+              const nameInput = document.getElementById('studentName').value.trim();
+              if (!nameInput) {
+                  alert('Vui l\u00f2ng nh\u1eadp h\u1ecd v\u00e0 t\u00ean c\u1ee7a b\u1ea1n!');
+                  document.getElementById('studentName').focus();
+                  return;
+              }
+              document.getElementById('startScreen').classList.remove('active');
+              document.getElementById('testScreen').classList.add('active');
+              window.scrollTo(0, 0);
+          }
+
+          init();
+
+
+
+    </script>
+    </body>
+    </html>
+    
